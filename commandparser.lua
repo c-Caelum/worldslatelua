@@ -16,6 +16,7 @@ local parser = {};
 -- }. These are checked sequentially.
 local commands : {string:{string:RemoteFunction}} = {};
 local HexArgs : {string:number} = {};
+local HexArgCollectors : {number : any} = {};
 local BaseArgRegistration : {number} = {};
 
 -- handler id to packager peripheral mapping
@@ -29,8 +30,21 @@ local function sendDataToHex(data : {string}, handlerid : string)
 ") .. (os.epoch("local")/1000));
 end
 
-function parser.registerCommand(validate, hexside, handler, handlerid, hexargs, baseargs)
-    
+function parser.registerCommand(commandName, validate, hexside, handler, handlerid, hexargs, baseargs)
+    commands[commandName] = {
+        ["validate"] = validate,
+        ["hexside"] = hexside,
+        ["handler"] = handler,
+        ["handlerid"] = handlerid,
+        ["hexargs"] = hexargs,
+        ["baseargs"] = baseargs
+    }
+end
+
+function parser.registerHexArgs(hexargName, hexargCollector, hexargID)
+    assert(hexargName and hexargCollector and hexargID);
+    HexArgs[hexargName] = hexargID;
+    HexArgCollectors[hexargID] = hexargCollector;
 end
 
 --- Takes in the command, the arguments to the command, and a callback should there be any errors. Executes the command.
@@ -81,6 +95,7 @@ function parser.command(command : string, args : {string}, identification : stri
                 return;
             end
             table.insert(truehexargs, truehexarg);
+            table.insert(truehexargs, (HexArgCollectors[truehexarg])(args, identification))
         end
         local hexargsstring = table.concat(truehexargs, "ƒ")
         local baseargs : {number} = (commandData["baseargs"])(args, identification);
