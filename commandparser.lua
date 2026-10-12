@@ -116,6 +116,7 @@ function parser.command(command, args, identification, error_callback)
         table.insert(data_to_send, hexargsstring);
         table.insert(data_to_send, baseargstring);
         table.insert(data_to_send, handlerID);
+        print(textutils.serialise(data_to_send));
         sendDataToHex(data_to_send, handlerID);
     end
 end
