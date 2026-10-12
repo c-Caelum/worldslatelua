@@ -1,3 +1,5 @@
+
+
 local parser = {};
 
 
@@ -71,15 +73,16 @@ function parser.command(command : string, args : {string}, identification : stri
         end
 
         local hexargs : {string} = (commandData["hexargs"])(args, identification);
-        local truehexargs : number = {};
+        local truehexargs : {number} = {};
         for i,v in pairs(hexargs) do
-            local truehexarg : number? = HexArgs[v];
+            local truehexarg : number = HexArgs[v];
             if (not truehexarg) then
                 error_callback(string.format("Internal error. Hexarg %s is invalid. Contact an administrator.", v));
                 return;
             end
             table.insert(truehexargs, truehexarg);
         end
+        local hexargsstring = table.concat(truehexargs, "ƒ")
         local baseargs : {number} = (commandData["baseargs"])(args, identification);
         for i, v in pairs(baseargs) do
             if (not BaseArgRegistration[v]) then
@@ -87,7 +90,10 @@ function parser.command(command : string, args : {string}, identification : stri
                 return;
             end
         end
+        local baseargstring = table.concat(baseargs, "ƒ");
 
+        table.insert(data_to_send, hexargsstring);
+        table.insert(data_to_send, baseargstring);
         table.insert(data_to_send, handlerID);
         sendDataToHex(data_to_send, handlerID);
     end
