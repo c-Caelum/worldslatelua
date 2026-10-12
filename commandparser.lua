@@ -68,14 +68,14 @@ function parser.command(command, args, identification, error_callback)
     local data_to_send = {};
     local handlerdata = {};
     local stop_send = false;
-    if not (commandData["handler"])(args, identification, function(toSend)
+    if not ((commandData["handler"])(args, identification, function(toSend)
         if type(toSend) ~= "string" then
             error_callback(string.format("Internal error: non-string data passed into hex. Type is %s. Contact an administrator.", type(toSend)));
             stop_send = true;
             return;
         end
         table.insert(handlerdata, toSend);
-    end, error_callback) then
+    end, error_callback)) then
         return;
     end;
     if stop_send then
