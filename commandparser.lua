@@ -14,16 +14,16 @@ local parser = {};
 --  hexargs -> {string}; which arguments are required for the handler hex, if hexside is true;
 --  baseargs -> {int}; which <i>static</i> argument ids to pass into the handler hex, if hexside is true;
 -- }. These are checked sequentially.
-local commands : {string:{string:RemoteFunction}} = {};
-local HexArgs : {string:number} = {};
-local HexArgCollectors : {number : any} = {};
-local BaseArgRegistration : {number} = {};
+local commands = {};
+local HexArgs = {};
+local HexArgCollectors = {};
+local BaseArgRegistration = {};
 
 -- handler id to packager peripheral mapping
-local handlerID_to_packager : {string:any} = {};
+local handlerID_to_packager = {};
 
 -- can send up to 1728 chars worth of data. Do not exceed this, please.
-local function sendDataToHex(data : {string}, handlerid : string)
+local function sendDataToHex(data, handlerid)
     local packager_to_use = handlerID_to_packager[handlerid];
 
     packager_to_use.setAddress(table.concat(data, "\
@@ -42,26 +42,26 @@ function parser.registerCommand(commandName, validate, hexside, handler, handler
 end
 
 function parser.registerHexArgs(hexargName, hexargCollector, hexargID)
-    assert(hexargName and hexargCollector and hexargID);
+    assert(hexargName and hexargCollector and hexargID, "Registered with nil parameters.");
     HexArgs[hexargName] = hexargID;
     HexArgCollectors[hexargID] = hexargCollector;
 end
 
 --- Takes in the command, the arguments to the command, and a callback should there be any errors. Executes the command.
 --- The error callback will be called with a string describing what happened if there is an error.
-function parser.command(command : string, args : {string}, identification : string, error_callback : RemoteFunction) : nil
+function parser.command(command, args, identification, error_callback)
     local commandData = commands[command];
     if ((not commandData) or (not commandData["validate"])) then
         error_callback("Command does not exist. If this does exist, contact an administrator.");
         return;
     end
-    local validated : boolean, whyWrong : string = (commandData["validate"])(args, identification);
+    local validated, whyWrong = (commandData["validate"])(args, identification);
     if (not validated) then
         error_callback("Incorrect arguments: " .. whyWrong);
         return;
     end
     local hexside = ((commandData["hexside"]))(args, identification);
-    local data_to_send : {string} = {};
+    local data_to_send = {};
     local stop_send = false;
     if (not (commandData["handler"])(args, identification, function(toSend)
         if (type(toSend) ~= "string") then
@@ -86,10 +86,10 @@ function parser.command(command : string, args : {string}, identification : stri
             return;
         end
 
-        local hexargs : {string} = (commandData["hexargs"])(args, identification);
-        local truehexargs : {number} = {};
+        local hexargs = (commandData["hexargs"])(args, identification);
+        local truehexargs = {};
         for i,v in pairs(hexargs) do
-            local truehexarg : number = HexArgs[v];
+            local truehexarg = HexArgs[v];
             if (not truehexarg) then
                 error_callback(string.format("Internal error. Hexarg %s is invalid. Contact an administrator.", v));
                 return;
@@ -98,7 +98,7 @@ function parser.command(command : string, args : {string}, identification : stri
             table.insert(truehexargs, (HexArgCollectors[truehexarg])(args, identification))
         end
         local hexargsstring = table.concat(truehexargs, "ƒ")
-        local baseargs : {number} = (commandData["baseargs"])(args, identification);
+        local baseargs = (commandData["baseargs"])(args, identification);
         for i, v in pairs(baseargs) do
             if (not BaseArgRegistration[v]) then
                 error_callback(string.format("Internal error. Basearg %d is invalid. Contact an administrator.", v));
@@ -114,3 +114,4 @@ function parser.command(command : string, args : {string}, identification : stri
     end
 end
 
+return parser
