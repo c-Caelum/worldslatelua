@@ -41,6 +41,10 @@ function parser.registerCommand(commandName, validate, hexside, handler, handler
     }
 end
 
+function parser.registerHandler(id, packager)
+    handlerID_to_packager[id] = packager;
+end
+
 function parser.registerHexArgs(hexargName, hexargCollector, hexargID)
     assert(hexargName and hexargCollector and hexargID, "Registered with nil parameters.");
     HexArgs[hexargName] = hexargID;
@@ -62,21 +66,23 @@ function parser.command(command, args, identification, error_callback)
     end
     local hexside = ((commandData["hexside"]))(args, identification);
     local data_to_send = {};
+    local handlerdata = {};
     local stop_send = false;
-    if (not (commandData["handler"])(args, identification, function(toSend)
-        if (type(toSend) ~= "string") then
+    if not (commandData["handler"])(args, identification, function(toSend)
+        if type(toSend) ~= "string" then
             error_callback(string.format("Internal error: non-string data passed into hex. Type is %s. Contact an administrator.", type(toSend)));
             stop_send = true;
             return;
         end
-        table.insert(data_to_send);
-    end, error_callback)) then
+        table.insert(handlerdata, toSend);
+    end, error_callback) then
         return;
     end;
-    if (stop_send) then
-        error_callback("Internal error! aborting!")
+    if stop_send then
+        error_callback("Internal error! aborting!");
         return;
     end
+    table.insert(data_to_send, table.concat(handlerdata, "ƒ"));
 
     if (hexside) then
         local handlerID = (commandData["handlerid"])(args, identification);
