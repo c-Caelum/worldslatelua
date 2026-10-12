@@ -82,7 +82,7 @@ function parser.command(command, args, identification, error_callback)
         error_callback("Internal error! aborting!");
         return;
     end
-    table.insert(data_to_send, table.concat(handlerdata, "ƒ"));
+    table.insert(data_to_send, table.concat(handlerdata, "˚"));
     print("Inserted handler data!");
 
     if (hexside) then
@@ -105,7 +105,7 @@ function parser.command(command, args, identification, error_callback)
             table.insert(truehexargs, truehexarg);
             table.insert(truehexargs, (HexArgCollectors[truehexarg])(args, identification))
         end
-        local hexargsstring = table.concat(truehexargs, "ƒ")
+        local hexargsstring = table.concat(truehexargs, "˚")
         local baseargs = (commandData["baseargs"])(args, identification);
         for i, v in pairs(baseargs) do
             if (not BaseArgRegistration[v]) then
@@ -113,7 +113,7 @@ function parser.command(command, args, identification, error_callback)
                 return;
             end
         end
-        local baseargstring = table.concat(baseargs, "ƒ");
+        local baseargstring = table.concat(baseargs, "˚");
 
         table.insert(data_to_send, hexargsstring);
         table.insert(data_to_send, baseargstring);
