@@ -20,14 +20,19 @@ local HexArgCollectors = {};
 local BaseArgRegistration = {};
 
 -- handler id to packager peripheral mapping
-local handlerID_to_packager = {};
+local handlerID_to_link = {};
 
 -- can send up to 1728 chars worth of data. Do not exceed this, please.
 local function sendDataToHex(data, handlerid)
-    local packager_to_use = handlerID_to_packager[handlerid];
-
-    packager_to_use.setAddress(table.concat(data, "\
-") .. (os.epoch("local")/1000));
+    local link_to_use = handlerID_to_link[handlerid];
+    link_to_use.clear()
+    link_to_use.setCursorPos(1, 1);
+    for i, v in ipairs(data) do
+        link_to_use.write(v .. "\
+");
+    end
+    link_to_use.write(tostring(os.epoch()/1000));
+    link_to_use.update();
 end
 
 function parser.registerCommand(commandName, validate, hexside, handler, handlerid, hexargs, baseargs)
@@ -41,8 +46,8 @@ function parser.registerCommand(commandName, validate, hexside, handler, handler
     }
 end
 
-function parser.registerHandler(id, packager)
-    handlerID_to_packager[id] = packager;
+function parser.registerHandler(id, link)
+    handlerID_to_link[id] = link;
 end
 
 function parser.registerHexArgs(hexargName, hexargCollector, hexargID)
@@ -74,6 +79,7 @@ function parser.command(command, args, identification, error_callback)
             stop_send = true;
             return;
         end
+        print("data is",toSend);
         table.insert(handlerdata, toSend);
     end, error_callback)) then
         return;
@@ -89,7 +95,7 @@ function parser.command(command, args, identification, error_callback)
         print("Hexside!");
         local handlerID = (commandData["handlerid"])(args, identification);
 
-        if (not handlerID_to_packager[handlerID]) then
+        if (not handlerID_to_link[handlerID]) then
             error_callback(string.format("Internal error: handler %s does not exist/is not registered. Contact an administrator.", handlerID));
             return;
         end
