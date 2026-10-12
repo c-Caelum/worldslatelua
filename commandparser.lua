@@ -83,8 +83,10 @@ function parser.command(command, args, identification, error_callback)
         return;
     end
     table.insert(data_to_send, table.concat(handlerdata, "ƒ"));
+    print("Inserted handler data!");
 
     if (hexside) then
+        print("Hexside!");
         local handlerID = (commandData["handlerid"])(args, identification);
 
         if (not handlerID_to_packager[handlerID]) then
